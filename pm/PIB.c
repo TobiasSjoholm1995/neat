@@ -15,6 +15,11 @@ void load_file(char *filePath) {
 
 }
 
-int main() { }
+int main() {
+    json_t * t= load_json_file("/home/free/Downloads/neat-TobiasSjoholm1995-patch-1/pm/JsonFiles/pib/default.profile");
 
+    write_json_file(
+        "/home/free/Downloads/neat-TobiasSjoholm1995-patch-1/pm/JsonFiles/cib/profile.cib",
+        t);
+ }
 
