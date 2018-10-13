@@ -49,13 +49,37 @@ add_file(time_file_list_t *head, const char *file_path)
 }
 
 void
+remove_file(time_file_list_t **head, const char *file_path)
+{
+    if(head == NULL || *head == NULL) { return; }
+
+    time_file_list_t *current = *head;
+    time_file_list_t *previous = NULL;
+
+    while(current != NULL) {
+        if(strcmp(current->time_file->filename,file_path) == 0) {
+            if(previous == NULL) {
+                *head = current->next;               
+            } 
+            else {
+                previous->next = current->next;
+            }   
+            free(current);      
+            break;
+        }
+        previous = current;
+        current = current->next;
+    }
+}
+
+void
 update_time(time_file_list_t *head, const char *file_path)
 {
     time_file_list_t *current = head;
     while(current != NULL) {
         if(strcmp(current->time_file->filename, file_path) == 0) { 
             current->time_file->last_modified = time(0);
-            return;
+            break;
         }
         current = current->next;
     }

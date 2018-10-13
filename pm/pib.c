@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <dirent.h>
+
 #include "pmhelper.h"
 #include "property.h"
 #include "modified_file.h"
@@ -49,7 +50,7 @@ read_all_modified_files(const char * dir_path)
             if (ent->d_type == file_type) {
                 const char * full_path = concat(concat(dir_path, "/"), ent->d_name);                                  
                 if(get_time_file(time_file_list, full_path) <= get_edit_time(full_path)) {
-                    load_file(full_path); //update file
+                    load_file(full_path); //update file, not done
                 }      
             }
         }
@@ -81,6 +82,7 @@ neat_policy_init(char * filePath)
     if(json != NULL) {
         policy = json_to_neat_policy(json);
     }  
+
     if(policy  == NULL) {
         return NULL;  //error
     }
@@ -91,46 +93,7 @@ neat_policy_init(char * filePath)
     return policy;
 }
 
-//testing
-void 
-print_property(property_t *head) 
-{
-    property_t *current = head;
-    while(current != NULL) {
-        printf("\t%s:\n", current->key);
-        printf("\t\tprecedence: %d, ", current-> precedence);
-        printf("score: %d, ", current-> score);
-        printf("type: %d, ", current-> type);
-
-        if(current->type == INTEGER) printf("value: %d", current->value->integer);    
-        if(current->type == DOUBLE) printf("value: %f", current->value->double_t);
-        if(current->type == STRING) printf("value: %s", current->value->string);
-        if(current->type == BOOLEAN) printf("value: %s", current->value->boolean ? "true": "false");
-        if(current->type == RANGE) printf("value: range(%d,%d)", current->value->range.low_thresh, current->value->range.high_thresh); 
-        if(current->type == NULL_VALUE) printf("value: %s", "null"); 
-
-        printf("\n");
-        current = current->next;
-    }
-}
-
-
-//testing
-void 
-print_property_list(property_list_t *head) 
-{
-    property_list_t *current = head;
-    while(current != NULL) {
-        print_property(current->property);              
-        current = current->next;
-    }
-}
-
-//testing
-int main() 
-{
-    neat_policy_t *policy = neat_policy_init("/home/free/Downloads/neat-TobiasSjoholm1995-patch-1/pm/JsonFiles/cib/enp0s3.cib");
-
+void print_policy(neat_policy_t* policy) {
     if(policy != NULL) {   
         printf("uid: %s\n", policy->uid);
         printf("priority: %d\n", policy->priority);
@@ -142,10 +105,20 @@ int main()
         printf("properties: \n");
         print_property_list(policy->properties);
     }
-    else { printf("null error"); }
+    else { 
+        printf("null error"); 
+    }
+}
+
+//testing
+int main() 
+{
+    neat_policy_t *policy =  neat_policy_init("/home/free/Downloads/neat-TobiasSjoholm1995-patch-1/pm/JsonFiles/pib/default.profile");
+    print_policy(policy);
     
-    printf("\n----------------\nTime file list: \n");
-    print_list(time_file_list);
+    
+    //printf("\n----------------\nTime file list: \n");
+    //print_list(time_file_list);
   
     return 0;
 }

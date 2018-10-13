@@ -1,8 +1,5 @@
 #ifndef HEADER_MODIFIED_FILE
 #define HEADER_MODIFIED_FILE
-#include <stdbool.h>
-#include <stdlib.h>
-#include <time.h>
 
 typedef struct time_file {
     const char *filename;
@@ -15,11 +12,22 @@ typedef struct time_file_list
     struct time_file_list *next;
 } time_file_list_t;
 
-bool contain(time_file_list_t *head, const char *filename);
-time_file_t* create_time_file(const char *filename);
-time_file_list_t* add_file(time_file_list_t *head, const char *filename);
-void update_time(time_file_list_t *head, const char *filename);
-time_t get_time_file(time_file_list_t *head, const char *filename);
-void print_list(time_file_list_t *head);  //testing
+
+bool contain(time_file_list_t *head, const char *file_path);
+
+time_file_t* create_time_file(const char *file_path);
+
+//add at the start of the list
+time_file_list_t* add_file(time_file_list_t *head, const char *file_path);
+
+void remove_file(time_file_list_t **head, const char *file_path);
+
+void update_time(time_file_list_t *head, const char *file_path);
+
+//returns 0 if file does not exist in list
+time_t get_time_file(time_file_list_t *head, const char *file_path);
+
+void print_list(time_file_list_t *head); //testing
 
 #endif
+

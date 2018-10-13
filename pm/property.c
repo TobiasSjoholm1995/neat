@@ -1,5 +1,4 @@
 #include <stdio.h>
-#include <string.h>
 #include <jansson.h>
 #include <stdbool.h>
 
@@ -19,10 +18,11 @@ typedef union value {
 
 typedef struct property
 {
-    const char *key;
+    const char *key;  //unique
     int precedence;
     int score;
     value_t *value;
+    const char *name;
     type_t type;
     struct property *next;
 } property_t;
@@ -54,8 +54,8 @@ json_to_type_t(json_t *json)
         return STRING;
     else if(json_is_object(json))
          return RANGE;      //assume range?
-    else
-        return NULL_VALUE;  //idk what type, error handle?
+
+    return NULL_VALUE;  //idk what type, error handle?
 }
 
 value_t*
@@ -83,8 +83,7 @@ json_to_value_t(json_t *json)
         r.high_thresh = json_integer_value(json_object_get(json, "end"));
         my_value->range = r;
     }
-    else
-        printf("\n\nidk\n\n");
+    //mo error handling, just return null
     return my_value;
 }
 
@@ -95,7 +94,7 @@ json_to_property_t(json_t * json)
 
     property_t *head = malloc(sizeof(property_t));
     property_t *current = head;
-
+    
     void *iter = json_object_iter(json);
     while(iter)
     {
@@ -104,7 +103,8 @@ json_to_property_t(json_t * json)
         current->precedence = json_integer_value(json_object_get(json_object_iter_value(iter), "precedence"));
         current->score = json_integer_value(json_object_get(json_object_iter_value(iter), "score"));
         current->type = json_to_type_t(json_object_get(json_object_iter_value(iter), "value"));
-        current->value = json_to_value_t(json_object_get(json_object_iter_value(iter), "value"));             
+        current->value = json_to_value_t(json_object_get(json_object_iter_value(iter), "value"));
+        current->name = json_string_value(json_object_iter_value(iter));             
 
         if(json_object_iter_next(json,iter) != NULL) {    
             current-> next =  malloc(sizeof(property_t));
@@ -122,7 +122,7 @@ json_array_to_property_list(property_list_t* current,json_t *json) {
     size_t n = json_array_size(json);
     size_t index;
     json_t *value;
-
+    
     json_array_foreach(json, index, value) {
         if(json_is_array(value)) {
             current = json_array_to_property_list(current, value);      
@@ -146,7 +146,7 @@ json_to_property_list(json_t *json)
     if(json == NULL) { return NULL; }
 
     property_list_t *properties = NULL;
-
+   
     if(json_is_object(json)) {
         properties = malloc(sizeof(property_list_t));
         properties->property = json_to_property_t(json);
@@ -178,4 +178,39 @@ property_t *
 overwrite_property_value(property_t *list, property_t check)
 {
     return NULL;
+}
+
+//testing
+void 
+print_property(property_t *head) 
+{
+    property_t *current = head;
+    while(current != NULL) {
+        printf("\t%s:\n", current->key);
+        printf("\t\tprecedence: %d, ", current-> precedence);
+        printf("score: %d, ", current-> score);
+        printf("type: %d, ", current-> type);
+
+        if(current->type == INTEGER) printf("value: %d", current->value->integer);    
+        if(current->type == DOUBLE) printf("value: %f", current->value->double_t);
+        if(current->type == STRING) printf("value: %s", current->value->string);
+        if(current->type == BOOLEAN) printf("value: %s", current->value->boolean ? "true": "false");
+        if(current->type == RANGE) printf("value: range(%d,%d)", current->value->range.low_thresh, current->value->range.high_thresh); 
+        if(current->type == NULL_VALUE) printf("value: %s", "null"); 
+
+        printf("\n");
+        current = current->next;
+    }
+}
+
+
+//testing
+void 
+print_property_list(property_list_t *head) 
+{
+    property_list_t *current = head;
+    while(current != NULL) {
+        print_property(current->property);              
+        current = current->next;
+    }
 }
