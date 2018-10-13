@@ -136,6 +136,7 @@ json_array_to_property_list(property_list_t* current,json_t *json) {
         }      
     }
     current->next = NULL;
+
     return current;    
 }
 

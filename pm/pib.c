@@ -5,6 +5,7 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include "property.h"
+#include "modified_file.h"
 
 typedef struct neat_policy_s {
     const char *uid;
@@ -16,16 +17,20 @@ typedef struct neat_policy_s {
     property_list_t *properties;    //PropertyMultiList
 } neat_policy_t;
 
-time_t last_loaded_time;
+time_file_list_t *time_file_list;
 
 //return NULL if file not found
 json_t* 
-load_file(char *filePath) 
+load_file(char *filename) 
 {
-    //ToDo: set last loaded time
-    //last_loaded_time = time(0);
+    json_t *json = load_json_file(filename);
 
-    json_t *json = load_json_file(filePath);
+    if(json != NULL) {
+        if(!contain(time_file_list, filename))
+            time_file_list = add_file(time_file_list, filename);
+        else
+            update_time(time_file_list,filename);
+    }
     return json;
 }
 
@@ -51,7 +56,7 @@ neat_policy_init(char * filePath)
     if(json != NULL) {
         policy = json_to_neat_policy(json);
     }  
-    if(policy  == NULL) { 
+    if(policy  == NULL) {
         return NULL;  //error
     }
     
@@ -98,13 +103,13 @@ print_property_list(property_list_t *head)
 
 int main() 
 {
-    neat_policy_t *policy = neat_policy_init("/home/free/Downloads/neat-TobiasSjoholm1995-patch-1/pm/JsonFiles/pib/default.profile");
+    neat_policy_t *policy = neat_policy_init("/home/free/Downloads/neat-TobiasSjoholm1995-patch-1/pm/JsonFiles/cib/enp0s3.cib");
 
     if(policy != NULL) {   
         printf("uid: %s\n", policy->uid);
         printf("priority: %d\n", policy->priority);
         printf("replace_matched: %d\n", policy->replace_matched);
-        printf("time: %ld (weird format,lazy)\n", policy->time);
+        printf("time: %s \n",ctime(&policy->time));
         printf("filename: %s\n", policy->filename);
         printf("match: \n");
         print_property(policy->match);
@@ -112,6 +117,9 @@ int main()
         print_property_list(policy->properties);
     }
     else { printf("null error"); }
+    
+    printf("----------------\nTime file list: \n");
+    print_list(time_file_list);
   
     return 0;
 }
