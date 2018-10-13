@@ -1,7 +1,7 @@
-#include<stdio.h>
-#include<string.h>
-#include<jansson.h>
-#include<stdbool.h>
+#include <stdio.h>
+#include <string.h>
+#include <jansson.h>
+#include <stdbool.h>
 
 typedef enum type {
      INTEGER, DOUBLE, BOOLEAN, STRING, RANGE, NULL_VALUE,

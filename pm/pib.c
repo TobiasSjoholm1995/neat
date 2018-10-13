@@ -1,9 +1,10 @@
 #include <stdio.h>
 #include <time.h>
 #include <jansson.h>
-#include "pmhelper.h"
 #include <stdbool.h>
 #include <stdlib.h>
+#include <dirent.h>
+#include "pmhelper.h"
 #include "property.h"
 #include "modified_file.h"
 
@@ -21,17 +22,41 @@ time_file_list_t *time_file_list;
 
 //return NULL if file not found
 json_t* 
-load_file(char *filename) 
+load_file(const char *file_path) 
 {
-    json_t *json = load_json_file(filename);
-
+    json_t *json = load_json_file(file_path);
+    
     if(json != NULL) {
-        if(!contain(time_file_list, filename))
-            time_file_list = add_file(time_file_list, filename);
+        if(!contain(time_file_list, file_path))
+            time_file_list = add_file(time_file_list, file_path);
         else
-            update_time(time_file_list,filename);
+            update_time(time_file_list,file_path);
     }
     return json;
+}
+
+
+
+void
+read_all_modified_files(const char * dir_path) 
+{
+    DIR *dir;
+    struct dirent *ent;
+    int file_type = 8;
+
+    if ((dir = opendir (dir_path)) != NULL) {
+        while ((ent = readdir (dir)) != NULL) {
+            if (ent->d_type == file_type) {
+                const char * full_path = concat(concat(dir_path, "/"), ent->d_name);                                  
+                if(get_time_file(time_file_list, full_path) <= get_edit_time(full_path)) {
+                    load_file(full_path); //update file
+                }      
+            }
+        }
+        closedir (dir);
+    } else {
+        write_log(__FILE__, __func__, concat("Error: Can't read the directoty ", dir_path));    
+    }
 }
 
 neat_policy_t*
@@ -101,6 +126,7 @@ print_property_list(property_list_t *head)
     }
 }
 
+//testing
 int main() 
 {
     neat_policy_t *policy = neat_policy_init("/home/free/Downloads/neat-TobiasSjoholm1995-patch-1/pm/JsonFiles/cib/enp0s3.cib");
@@ -118,7 +144,7 @@ int main()
     }
     else { printf("null error"); }
     
-    printf("----------------\nTime file list: \n");
+    printf("\n----------------\nTime file list: \n");
     print_list(time_file_list);
   
     return 0;

@@ -2,7 +2,7 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <time.h>
-//#include <unistd.h>
+#include <string.h>
 
 typedef struct time_file {
     const char *filename;
@@ -17,43 +17,43 @@ typedef struct time_file_list
 
 
 bool
-contain(time_file_list_t *head, const char *filename)
+contain(time_file_list_t *head, const char *file_path)
 {
     time_file_list_t *current = head;
     while(current != NULL) {
-        if(current->time_file->filename == filename)
-           { return true; }
+        if(strcmp(current->time_file->filename,file_path) == 0) { 
+            return true; 
+        }
         current = current->next;
     }
     return false;
 }
 
 time_file_t*
-create_time_file(const char *filename) 
+create_time_file(const char *file_path) 
 {
     time_file_t *tfile = malloc(sizeof(time_file_t));
-    tfile->filename = filename;
+    tfile->filename = file_path;
     tfile->last_modified = time(0);
     return tfile;
 }
 
 //add at the start of the list
 time_file_list_t*
-add_file(time_file_list_t *head, const char *filename)
+add_file(time_file_list_t *head, const char *file_path)
 {
     time_file_list_t *new_head = malloc(sizeof(time_file_list_t));
-    new_head->time_file = create_time_file(filename);
-
+    new_head->time_file = create_time_file(file_path);
     new_head->next = head;
     return new_head;
 }
 
 void
-update_time(time_file_list_t *head, const char *filename)
+update_time(time_file_list_t *head, const char *file_path)
 {
     time_file_list_t *current = head;
     while(current != NULL) {
-        if(current->time_file->filename == filename) { 
+        if(strcmp(current->time_file->filename, file_path) == 0) { 
             current->time_file->last_modified = time(0);
             return;
         }
@@ -61,12 +61,13 @@ update_time(time_file_list_t *head, const char *filename)
     }
 }
 
+//returns 0 if file does not exist in list
 time_t
-get_time_file(time_file_list_t *head, const char *filename)
+get_time_file(time_file_list_t *head, const char *file_path)
 {
     time_file_list_t *current = head;
     while(current != NULL) {
-        if(current->time_file->filename == filename) {          
+        if(strcmp(current->time_file->filename,file_path) == 0) {                    
             return current->time_file->last_modified;
         }
         current = current->next;
@@ -74,6 +75,7 @@ get_time_file(time_file_list_t *head, const char *filename)
     return 0;
 }
 
+//testing
 void
 print_list(time_file_list_t *head) {
     time_file_list_t *current = head;
@@ -83,19 +85,3 @@ print_list(time_file_list_t *head) {
         current = current->next;
     }
 }
-
-
-/*
-int main() {
-
-    time_file_list_t *head = NULL;
-    head = add_file(head, "test1.c");
-    head = add_file(head,"test2.c");
-    print_list(head);
-    printf("-------\n");
-    usleep(10000000);
-    update_time(head,"test2.c");
-    print_list(head);
-
-    return 0;
-}*/

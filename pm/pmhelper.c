@@ -8,6 +8,7 @@
 
 #define FILENAME "ErrorLog.txt"
 
+
 char*
  concat(const char *s1, const char *s2)
 {
@@ -24,13 +25,13 @@ char*
 }
 
 int 
-fileE_xist(char * filePath) 
+fileE_xist(const char * filePath) 
 {
    return access(filePath, F_OK) != -1; 
 }
 
 void 
-write_log(const char* module, const char* func, char* desc) 
+write_log(const char* module, const char* func, const char* desc) 
 {
     char time_buffer[100];
     time_t now = time (0);
@@ -41,6 +42,14 @@ write_log(const char* module, const char* func, char* desc)
         fprintf(fp, "Time: %s  \nModule: %s\nFunction: %s\nDescription: %s\n\n", time_buffer, module, func, desc);  
         fclose(fp);
     }
+}
+
+time_t
+get_edit_time(const char *file_path) 
+{
+    struct stat attr;
+    stat(file_path, &attr);
+    return attr.st_mtime;
 }
 
 void 
@@ -66,12 +75,12 @@ file_is_modified(const char *path, time_t oldTime)
 
 
 json_t* 
-load_json_file(char *filePath) 
+load_json_file(const char *file_path) 
 {
     json_t *json = NULL;
     json_error_t error;
 
-    json = json_load_file(filePath, 0, &error);
+    json = json_load_file(file_path, 0, &error);
 
     if(!json) {
         write_log(__FILE__, __func__, error.text);
@@ -80,10 +89,10 @@ load_json_file(char *filePath)
 }
 
 void 
-write_json_file(char* filePath, json_t *json) 
+write_json_file(const char* filePath, json_t *json) 
 {
     if(json_dump_file(json, filePath, JSON_INDENT(4)) == -1) {
         write_log(__FILE__, __func__, concat("Error: Unable to generate a Json file, ", filePath));
     }
 }
-                                                                                                                                                                                                                
+                                                                                                                                                                                            

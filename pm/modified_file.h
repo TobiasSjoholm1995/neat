@@ -20,6 +20,6 @@ time_file_t* create_time_file(const char *filename);
 time_file_list_t* add_file(time_file_list_t *head, const char *filename);
 void update_time(time_file_list_t *head, const char *filename);
 time_t get_time_file(time_file_list_t *head, const char *filename);
-void print_list(time_file_list_t *head);
+void print_list(time_file_list_t *head);  //testing
 
 #endif
