@@ -2,7 +2,8 @@
 #include <jansson.h>
 #include <stdbool.h>
 
-typedef enum type {
+typedef enum type 
+{
      INTEGER, DOUBLE, BOOLEAN, STRING, RANGE, NULL_VALUE,
 }type_t;
 
@@ -12,17 +13,17 @@ typedef struct range
     unsigned int high_thresh;
 }range_t;
 
-typedef union value { 
+typedef union value 
+{ 
     int integer; double double_t; bool boolean; const char *string; range_t range;
 }value_t;
 
 typedef struct property
 {
-    const char *key;  //unique
+    const char *key;
     int precedence;
     int score;
     value_t *value;
-    const char *name;
     type_t type;
     struct property *next;
 } property_t;
@@ -55,7 +56,7 @@ json_to_type_t(json_t *json)
     else if(json_is_object(json))
          return RANGE;      //assume range?
 
-    return NULL_VALUE;  //idk what type, error handle?
+    return NULL_VALUE;  //unknown type, error handle?
 }
 
 value_t*
@@ -103,8 +104,7 @@ json_to_property_t(json_t * json)
         current->precedence = json_integer_value(json_object_get(json_object_iter_value(iter), "precedence"));
         current->score = json_integer_value(json_object_get(json_object_iter_value(iter), "score"));
         current->type = json_to_type_t(json_object_get(json_object_iter_value(iter), "value"));
-        current->value = json_to_value_t(json_object_get(json_object_iter_value(iter), "value"));
-        current->name = json_string_value(json_object_iter_value(iter));             
+        current->value = json_to_value_t(json_object_get(json_object_iter_value(iter), "value"));            
 
         if(json_object_iter_next(json,iter) != NULL) {    
             current-> next =  malloc(sizeof(property_t));
@@ -118,7 +118,8 @@ json_to_property_t(json_t * json)
 }
 
 property_list_t*
-json_array_to_property_list(property_list_t* current,json_t *json) {
+json_array_to_property_list(property_list_t* current,json_t *json)
+{
     size_t n = json_array_size(json);
     size_t index;
     json_t *value;

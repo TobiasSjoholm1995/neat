@@ -8,9 +8,8 @@
 
 #define FILENAME "ErrorLog.txt"
 
-
 char*
- concat(const char *s1, const char *s2)
+concat(const char *s1, const char *s2)
 {
     const size_t len1 = strlen(s1);
     const size_t len2 = strlen(s2);
@@ -25,9 +24,9 @@ char*
 }
 
 int 
-fileE_xist(const char * filePath) 
+file_exist(const char * file_path) 
 {
-   return access(filePath, F_OK) != -1; 
+   return access(file_path, F_OK) != -1; 
 }
 
 void 
@@ -45,7 +44,7 @@ write_log(const char* module, const char* func, const char* desc)
 }
 
 time_t
-get_edit_time(const char *file_path) 
+file_edit_time(const char *file_path) 
 {
     struct stat attr;
     stat(file_path, &attr);
@@ -77,6 +76,7 @@ file_is_modified(const char *path, time_t oldTime)
 json_t* 
 load_json_file(const char *file_path) 
 {
+    if(file_path == NULL) { return NULL; }
     json_t *json = NULL;
     json_error_t error;
 

@@ -6,40 +6,57 @@
 #include <dirent.h>
 
 #include "pmhelper.h"
-#include "property.h"
-#include "modified_file.h"
+#include "node.h"
 
-typedef struct neat_policy_s {
-    const char *uid;
-    int priority;
-    bool replace_matched;
-    char *filename;
-    time_t time;
-    property_t *match;              //PropertyList
-    property_list_t *properties;    //PropertyMultiList
-} neat_policy_t;
+node_t *head_node = NULL;
 
-time_file_list_t *time_file_list;
+void
+json_to_node(node_t *node, json_t *json) 
+{
+    if(json != NULL && node != NULL) {
+        node-> uid = json_string_value(json_object_get(json, "uid"));    
+        node->priority = json_real_value(json_object_get(json, "priority"));
+        node->replace_matched = json_boolean_value(json_object_get(json, "replace_matched"));
+        node-> match = json_to_property_t(json_object_get(json, "match")); 
+        node-> properties = json_to_property_list(json_object_get(json, "properties"));
+    }
+}
 
-//return NULL if file not found
-json_t* 
-load_file(const char *file_path) 
+node_t * 
+create_node(const char * file_path) 
 {
     json_t *json = load_json_file(file_path);
-    
-    if(json != NULL) {
-        if(!contain(time_file_list, file_path))
-            time_file_list = add_file(time_file_list, file_path);
-        else
-            update_time(time_file_list,file_path);
+
+    if(json == NULL) { return NULL; }
+
+    node_t *node = malloc(sizeof(node_t));
+    json_to_node(node, json);
+    node->filename = file_path;
+    node->last_updated = time(0);
+    node->next = NULL;
+
+    return node;
+}
+
+void
+update_node(const char * file_path) 
+{
+    node_t *node = get_node(head_node, file_path);
+
+    if(node != NULL) {
+        if(node->last_updated <= file_edit_time(file_path)) {
+            json_to_node(node, load_json_file(file_path)); //update file
+            node->last_updated = time(0);
+        }
     }
-    return json;
+    else {  //node does not exist, create it
+        head_node = add_node(head_node, create_node(file_path));
+    }   
 }
 
 
-
 void
-read_all_modified_files(const char * dir_path) 
+read_all_modified_files(const char *dir_path) 
 {
     DIR *dir;
     struct dirent *ent;
@@ -48,10 +65,7 @@ read_all_modified_files(const char * dir_path)
     if ((dir = opendir (dir_path)) != NULL) {
         while ((ent = readdir (dir)) != NULL) {
             if (ent->d_type == file_type) {
-                const char * full_path = concat(concat(dir_path, "/"), ent->d_name);                                  
-                if(get_time_file(time_file_list, full_path) <= get_edit_time(full_path)) {
-                    load_file(full_path); //update file, not done
-                }      
+                update_node(concat(concat(dir_path, "/"), ent->d_name));                
             }
         }
         closedir (dir);
@@ -60,61 +74,11 @@ read_all_modified_files(const char * dir_path)
     }
 }
 
-neat_policy_t*
-json_to_neat_policy(json_t *json)
-{
-    neat_policy_t *policy = malloc(sizeof(neat_policy_t));
-
-    policy-> uid = json_string_value(json_object_get(json, "uid"));    
-    policy->priority = json_real_value(json_object_get(json, "priority"));
-    policy->replace_matched = json_boolean_value(json_object_get(json, "replace_matched"));
-    policy-> match = json_to_property_t(json_object_get(json, "match")); 
-    policy-> properties = json_to_property_list(json_object_get(json, "properties")); 
-    return policy;
-}
-
-neat_policy_t * 
-neat_policy_init(char * filePath) 
-{
-    neat_policy_t *policy = NULL;
-    json_t *json = load_file(filePath);
-
-    if(json != NULL) {
-        policy = json_to_neat_policy(json);
-    }  
-
-    if(policy  == NULL) {
-        return NULL;  //error
-    }
-    
-    policy->filename = filePath;
-    policy->time = time(NULL);
-
-    return policy;
-}
-
-void print_policy(neat_policy_t* policy) {
-    if(policy != NULL) {   
-        printf("uid: %s\n", policy->uid);
-        printf("priority: %d\n", policy->priority);
-        printf("replace_matched: %d\n", policy->replace_matched);
-        printf("time: %s \n",ctime(&policy->time));
-        printf("filename: %s\n", policy->filename);
-        printf("match: \n");
-        print_property(policy->match);
-        printf("properties: \n");
-        print_property_list(policy->properties);
-    }
-    else { 
-        printf("null error"); 
-    }
-}
-
 //testing
 int main() 
 {
-    neat_policy_t *policy =  neat_policy_init("/home/free/Downloads/neat-TobiasSjoholm1995-patch-1/pm/JsonFiles/pib/default.profile");
-    print_policy(policy);
+    read_all_modified_files("/home/free/Downloads/neat-TobiasSjoholm1995-patch-1/pm/JsonFiles/pib");
+    print_node(head_node);
     
     
     //printf("\n----------------\nTime file list: \n");

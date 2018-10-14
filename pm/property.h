@@ -1,6 +1,8 @@
 #ifndef HEADER_PROPERTY
 #define HEADER_PROPERTY
 
+#include <jansson.h>
+
 typedef enum type {
      INTEGER, DOUBLE, BOOLEAN, STRING, RANGE, NULL_VALUE,
 }type_t;
